@@ -1,7 +1,20 @@
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+from flask import Flask, request, jsonify
+# ... (outros imports se houver)
 
+app = Flask(__name__)
+
+# --- ADICIONE ESSAS 3 LINHAS AQUI ---
+@app.route('/')
+def home():
+    return "Servidor do Agente de Lenha Ativo!", 200
+# -------------------------------------
+
+@app.route('/webhook', methods=['GET', 'POST'])
+def webhook():
+    # ... resto do seu código que já estava aí ...
 # Esse token é uma "senha" que nós inventamos. 
 # Guarde ela, pois vamos digitar essa MESMA senha lá no painel da Meta para ativar a conexão.
 VERIFY_TOKEN = "lenha_agente_secreto_2026"
