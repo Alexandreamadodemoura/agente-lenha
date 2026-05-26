@@ -1,43 +1,38 @@
 import os
 import json
-import requests
 import google.generativeai as genai
 import gspread
 from flask import Flask, request
 
 app = Flask(__name__)
 
-# Configuração do Gemini
+# Configuração Gemini
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# Configuração da Planilha na Memória
+# Configuração Planilha
 sheet = None
-erro_conexao = "Nenhum erro inicial."
+erro_conexao = "Aguardando conexão..."
 
 try:
-    # Lemos o texto puro direto da variável de ambiente que você acabou de criar
-    credenciais_texto = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-    
-    if credenciais_texto:
-        # Converte o texto para um dicionário que o gspread entende
-        credenciais_dict = json.loads(credenciais_texto)
-        client = gspread.service_account_from_dict(credenciais_dict)
+    # Lemos a string da variável de ambiente
+    cred_json_str = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+    if cred_json_str:
+        # Carrega o JSON da string e autoriza
+        creds_dict = json.loads(cred_json_str)
+        client = gspread.service_account_from_dict(creds_dict)
         sheet = client.open_by_key("1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY").sheet1
     else:
-        erro_conexao = "A variável GOOGLE_CREDENTIALS_JSON não foi encontrada no Render."
-        
+        erro_conexao = "Variável GOOGLE_CREDENTIALS_JSON não encontrada."
 except Exception as e:
-    # Se algo der errado, capturamos o erro técnico
     erro_conexao = repr(e)
-    print(f"Erro capturado: {erro_conexao}")
 
 @app.route('/')
 def home():
     if sheet:
         return "Agente de Lenha Ativo! Planilha: CONECTADA COM SUCESSO!", 200
     else:
-        return f"Agente de Lenha Ativo! MAS ocorreu um erro com a Planilha: -> {erro_conexao} <-", 200
+        return f"Agente de Lenha Ativo! MAS ocorreu um erro: -> {erro_conexao} <-", 200
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
@@ -45,7 +40,6 @@ def webhook():
         if request.args.get('hub.verify_token') == "lenha_agente_secreto_2026":
             return request.args.get('hub.challenge')
         return "Token inválido", 403
-    
     return "OK", 200
 
 if __name__ == '__main__':
