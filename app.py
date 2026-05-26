@@ -22,7 +22,8 @@ try:
         creds_dict = json.loads(decoded_json)
         
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_dict(creds_dict, scope)
+        # AQUI ESTAVA O ERRO! O comando correto é from_json_keyfile_dict
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         client = gspread.authorize(creds)
         sheet = client.open_by_key("1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY").sheet1
         print("Planilha conectada com sucesso!")
@@ -31,7 +32,7 @@ try:
 except Exception as e:
     print(f"Erro na conexão com a planilha: {e}")
 
-# 3. A Página Inicial (A que estava a faltar e gerou o erro!)
+# 3. A Página Inicial
 @app.route('/')
 def home():
     status = "conectada" if sheet else "NÃO conectada"
@@ -45,7 +46,6 @@ def webhook():
             return request.args.get('hub.challenge')
         return "Token inválido", 403
     
-    # Aqui entrará a lógica de ler a foto mais tarde
     return "OK", 200
 
 if __name__ == '__main__':
