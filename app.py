@@ -29,7 +29,6 @@ def webhook():
     
     # Processamento de mensagens
     data = request.json
-    # Aqui vamos processar a lógica do comprovante em breve
     print(data) 
     return "OK", 200
 
