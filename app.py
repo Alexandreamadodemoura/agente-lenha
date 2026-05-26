@@ -19,7 +19,8 @@ try:
     client = gspread.service_account(filename=caminho_arquivo)
     sheet = client.open_by_key("1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY").sheet1
 except Exception as e:
-    erro_conexao = str(e)
+    # repr() força a exibição da classe e dos detalhes brutos do erro
+    erro_conexao = repr(e)
     print(f"Erro capturado: {erro_conexao}")
 
 @app.route('/')
@@ -27,8 +28,8 @@ def home():
     if sheet:
         return "Agente de Lenha Ativo! Planilha: CONECTADA COM SUCESSO!", 200
     else:
-        # Aqui o robô vai confessar exatamente qual é o problema
-        return f"Agente de Lenha Ativo! MAS ocorreu um erro com a Planilha: {erro_conexao}", 200
+        # Coloquei setas para destacar exatamente onde o erro deve aparecer
+        return f"Agente de Lenha Ativo! MAS ocorreu um erro com a Planilha: -> {erro_conexao} <-", 200
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
