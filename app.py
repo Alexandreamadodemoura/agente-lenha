@@ -1,6 +1,4 @@
 import os
-import json
-import base64
 import requests
 import google.generativeai as genai
 import gspread
@@ -12,20 +10,15 @@ app = Flask(__name__)
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 2. Configuração da Planilha (O método novo e direto do gspread)
+# 2. Configuração da Planilha (Via Secret File do Render)
 sheet = None
 try:
-    encoded_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-    if encoded_json:
-        decoded_json = base64.b64decode(encoded_json).decode('utf-8')
-        creds_dict = json.loads(decoded_json)
-        
-        # A magia acontece aqui: o gspread faz tudo sozinho agora
-        client = gspread.service_account_from_dict(creds_dict)
-        sheet = client.open_by_key("1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY").sheet1
-        print("Planilha conectada com sucesso!")
-    else:
-        print("Variável GOOGLE_APPLICATION_CREDENTIALS_JSON não encontrada.")
+    # O gspread vai ler o arquivo diretamente da pasta segura do Render
+    caminho_arquivo = '/etc/secrets/credentials.json'
+    
+    client = gspread.service_account(filename=caminho_arquivo)
+    sheet = client.open_by_key("1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY").sheet1
+    print("Planilha conectada com sucesso!")
 except Exception as e:
     print(f"Erro na conexão com a planilha: {e}")
 
