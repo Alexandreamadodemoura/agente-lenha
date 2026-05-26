@@ -5,7 +5,6 @@ import requests
 import google.generativeai as genai
 import gspread
 from flask import Flask, request
-from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
 
@@ -13,7 +12,7 @@ app = Flask(__name__)
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 2. Configuração da Planilha (via Base64)
+# 2. Configuração da Planilha (O método novo e direto do gspread)
 sheet = None
 try:
     encoded_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
@@ -21,10 +20,8 @@ try:
         decoded_json = base64.b64decode(encoded_json).decode('utf-8')
         creds_dict = json.loads(decoded_json)
         
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        # AQUI ESTAVA O ERRO! O comando correto é from_json_keyfile_dict
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-        client = gspread.authorize(creds)
+        # A magia acontece aqui: o gspread faz tudo sozinho agora
+        client = gspread.service_account_from_dict(creds_dict)
         sheet = client.open_by_key("1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY").sheet1
         print("Planilha conectada com sucesso!")
     else:
