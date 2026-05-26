@@ -1,34 +1,32 @@
 import os
 import json
 import base64
+import requests
+import google.generativeai as genai
 import gspread
 from flask import Flask, request
 from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
 
-# Configuração que decodifica o Base64 da variável de ambiente
-sheet = None
-try:
-    encoded_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-    if encoded_json:
-        decoded_json = base64.b64decode(encoded_json).decode('utf-8')
-        creds_dict = json.loads(decoded_json)
-        
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_dict(creds_dict, scope)
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key("1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY").sheet1
-        print("Planilha conectada com sucesso!")
-    else:
-        print("Variável GOOGLE_APPLICATION_CREDENTIALS_JSON não encontrada.")
-except Exception as e:
-    print(f"Erro na conexão: {e}")
+# Configuração Gemini e Planilha
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-@app.route('/')
-def home():
-    status = "conectada" if sheet else "NÃO conectada"
-    return f"Agente de Lenha Ativo! Planilha: {status}", 200
+def extrair_peso_da_foto(image_url, token):
+    # Baixa a imagem do WhatsApp
+    headers = {"Authorization": f"Bearer {token}"}
+    img_data = requests.get(image_url, headers=headers).content
+    
+    # Pergunta ao Gemini qual é o peso na imagem
+    response = model.generate_content([
+        "Extraia apenas o valor numérico do peso desta imagem de comprovante. Responda apenas o número.",
+        {"mime_type": "image/jpeg", "data": img_data}
+    ])
+    return response.text.strip()
+
+# [Configuração da Planilha - A mesma que já tínhamos]
+# (Cole aqui o seu trecho de conexão com o gspread que já estava funcionando)
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
@@ -36,10 +34,16 @@ def webhook():
         if request.args.get('hub.verify_token') == "lenha_agente_secreto_2026":
             return request.args.get('hub.challenge')
         return "Token inválido", 403
-    
-    data = request.json
-    print(data) 
-    return "OK", 200
 
-if __name__ == '__main__':
-    app.run()
+    data = request.json
+    # Verifica se é uma mensagem de imagem
+    if 'messages' in data['entry'][0]['changes'][0]['value']:
+        msg = data['entry'][0]['changes'][0]['value']['messages'][0]
+        if 'image' in msg:
+            img_id = msg['image']['id']
+            # Pega o link da imagem (precisa da API do WhatsApp para pegar o link real)
+            # ... (Lógica para obter o link via Graph API da Meta)
+            peso = extrair_peso_da_foto(link_da_imagem, "SEU_TOKEN_WHATSAPP")
+            sheet.append_row(["Data", "Motorista", peso])
+            
+    return "OK", 200
