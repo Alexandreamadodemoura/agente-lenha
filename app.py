@@ -6,29 +6,30 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-# 1. Configuração do Gemini
+# Configuração do Gemini
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 2. Configuração da Planilha (Via Secret File do Render)
+# Configuração da Planilha e captura de erro
 sheet = None
+erro_conexao = "Nenhum erro inicial."
+
 try:
-    # O gspread vai ler o arquivo diretamente da pasta segura do Render
     caminho_arquivo = '/etc/secrets/credentials.json'
-    
     client = gspread.service_account(filename=caminho_arquivo)
     sheet = client.open_by_key("1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY").sheet1
-    print("Planilha conectada com sucesso!")
 except Exception as e:
-    print(f"Erro na conexão com a planilha: {e}")
+    erro_conexao = str(e)
+    print(f"Erro capturado: {erro_conexao}")
 
-# 3. A Página Inicial
 @app.route('/')
 def home():
-    status = "conectada" if sheet else "NÃO conectada"
-    return f"Agente de Lenha Ativo! Planilha: {status}", 200
+    if sheet:
+        return "Agente de Lenha Ativo! Planilha: CONECTADA COM SUCESSO!", 200
+    else:
+        # Aqui o robô vai confessar exatamente qual é o problema
+        return f"Agente de Lenha Ativo! MAS ocorreu um erro com a Planilha: {erro_conexao}", 200
 
-# 4. A porta do WhatsApp (Webhook)
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
     if request.method == 'GET':
