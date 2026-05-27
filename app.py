@@ -1,28 +1,31 @@
 import os
 import requests
+import google.generativeai as genai
 from flask import Flask, request
 
 app = Flask(__name__)
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-# ID da Planilha (O mesmo que você já tem)
-SHEET_ID = "1xEzT5SCZRLvcCUSeRTiCQZQZJ4SjtJXTxA_wxQVRUzY"
-# URL da API do Google para gravar dados (o "caminho direto")
-SHEET_URL = f"https://sheets.googleapis.com/v4/spreadsheets/{SHEET_ID}/values/Página1!A1:append?valueInputOption=RAW"
+# Cole aqui a URL que o Google Apps Script lhe deu
+APPS_SCRIPT_URL = "COLE_A_SUA_URL_AQUI"
 
-@app.route('/')
-def home():
-    return "Agente de Lenha Otimizado: Online e pronto para o WhatsApp!", 200
-
-@app.route('/webhook', methods=['GET', 'POST'])
+@app.route('/webhook', methods=['POST'])
 def webhook():
-    if request.method == 'GET':
-        if request.args.get('hub.verify_token') == "lenha_agente_secreto_2026":
-            return request.args.get('hub.challenge')
-        return "Token inválido", 403
-    
-    # Aqui é onde o WhatsApp envia a mensagem
     data = request.json
-    print(data) # Isso vai aparecer nos logs do Render para você ver o que o WhatsApp manda!
+    # Lógica simplificada: aqui você extrairia a imagem do WhatsApp
+    # e chamaria o Gemini:
+    # response = model.generate_content(["Extraia: lugar, data, peso, placa, peso liquido", imagem])
+    
+    # Exemplo de como enviar para a planilha:
+    payload = {
+        "lugar_entregue": "Maringá",
+        "data": "26/05/2026",
+        "peso": "12000",
+        "placa": "ABC-1234",
+        "peso_liquido": "11500"
+    }
+    requests.post(APPS_SCRIPT_URL, json=payload)
     
     return "OK", 200
 
