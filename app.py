@@ -4,16 +4,16 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-# COLE AQUI A URL QUE VOCÊ COPIOU NO PASSO 1
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby426xVIij60vcry6U4cRrLKwS0GiVM2cnbGKPlerlnOdofXVoKj7j-TG5HIi1fUg5c/exec"
+# COLE AQUI A URL QUE VOCÊ COPIOU DO GOOGLE APPS SCRIPT
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyd3aqtSw-O09eOs2rFaCM_ZRs1yI3NG_Hfp6bfMTyq3li9SbOc5qlD91CL8aNiFIni/exec"
 
 @app.route('/')
 def home():
-    return "Robô ativo e pronto para enviar dados!", 200
+    return "Robô de Lenha Online e Conectado à Planilha!", 200
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    # Aqui vamos simular o envio dos dados (após extrair da foto)
+    # Simulamos os dados que o Gemini extrairia da foto
     dados = {
         "lugar": "Maringá",
         "data": "26/05/2026",
@@ -21,9 +21,13 @@ def webhook():
         "placa": "ABC-1234",
         "peso_liquido": "14000"
     }
-    # O robô envia os dados para a planilha sem precisar de permissões especiais!
-    requests.post(APPS_SCRIPT_URL, json=dados)
-    return "Dados enviados!", 200
+    
+    # Envio para a planilha via Apps Script
+    try:
+        resposta = requests.post(APPS_SCRIPT_URL, json=dados)
+        return f"Dados enviados! Resposta do Google: {resposta.text}", 200
+    except Exception as e:
+        return f"Erro ao enviar: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run()
