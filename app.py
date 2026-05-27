@@ -8,7 +8,7 @@ genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # URL do seu Google Apps Script (aquele que criámos agora)
-APPS_SCRIPT_URL = "AKfycbyd3aqtSw-O09eOs2rFaCM_ZRs1yI3NG_Hfp6bfMTyq3li9SbOc5qlD91CL8aNiFIni"
+APPS_SCRIPT_URL = "https://script.google.com/macros/library/d/1q17ENVuVnWSykGRZb9gfgrQA0tMC32ow7iYE50RijGJW_1VZwpaev7fZ/1"
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
