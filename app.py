@@ -7,7 +7,7 @@ app = Flask(__name__)
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyd3aqtSw-O09eOs2rFaCM_ZRs1yI3NG_Hfp6bfMTyq3li9SbOc5qlD91CL8aNiFIni/exec" # Cole aqui aquele link que termina em /exec
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby426xVIij60vcry6U4cRrLKwS0GiVM2cnbGKPlerlnOdofXVoKj7j-TG5HIi1fUg5c/exec" # Cole aqui aquele link que termina em /exec
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
