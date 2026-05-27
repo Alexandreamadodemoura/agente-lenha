@@ -5,45 +5,47 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-# --- CONFIGURAÇÕES ---
+# Configurações do ambiente
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# Cole o link do seu Google Apps Script abaixo:
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyd3aqtSw-O09eOs2rFaCM_ZRs1yI3NG_Hfp6bfMTyq3li9SbOc5qlD91CL8aNiFIni/exec"
+APPS_SCRIPT_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI" # Cole aqui sua URL
+WHATSAPP_TOKEN = os.environ.get("WHATSAPP_TOKEN")
 VERIFY_TOKEN = "lenha_agente_secreto_2026"
-
-@app.route('/', methods=['GET'])
-def home():
-    return "CONTABILIDADE DE LENHA ATIVA!", 200
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
-    # 1. Validação da Meta (O "Handshake")
     if request.method == 'GET':
         if request.args.get('hub.verify_token') == VERIFY_TOKEN:
             return request.args.get('hub.challenge')
         return "Token inválido", 403
 
-    # 2. Processamento da Mensagem (POST)
     if request.method == 'POST':
         data = request.json
-        print(f"DADOS RECEBIDOS: {data}") # Isso aparecerá nos logs do Render
-        
         try:
-            # Verifica se é uma imagem
-            entry = data.get('entry', [])[0]
-            change = entry.get('changes', [])[0]
-            value = change.get('value', {})
-            messages = value.get('messages', [])
-            
-            if messages and messages[0].get('type') == 'image':
-                print("Imagem detectada! O robô vai processar agora.")
-                # (A lógica de extração do Gemini entra aqui no próximo passo)
+            value = data['entry'][0]['changes'][0]['value']
+            if 'messages' in value:
+                message = value['messages'][0]
                 
+                # Processamento de imagem
+                if message['type'] == 'image':
+                    image_id = message['image']['id']
+                    headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}"}
+                    
+                    # Obter URL e baixar imagem
+                    url_data = requests.get(f"https://graph.facebook.com/v18.0/{image_id}", headers=headers).json()
+                    image_content = requests.get(url_data['url'], headers=headers).content
+                    
+                    # Gemini analisa
+                    prompt = "Extraia: Lugar, Data, Peso bruto, Placa, Peso líquido. Responda apenas em JSON."
+                    response = model.generate_content([prompt, {"mime_type": "image/jpeg", "data": image_content}])
+                    
+                    # Envia para a planilha
+                    requests.post(APPS_SCRIPT_URL, data=response.text.replace('```json', '').replace('
+```', '').strip())
+                    print("Dados enviados com sucesso!")
         except Exception as e:
-            print(f"Erro ao processar: {e}")
-            
+            print(f"Erro: {e}")
         return "OK", 200
 
 if __name__ == '__main__':
