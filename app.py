@@ -1,21 +1,36 @@
+import os
+import requests
+import google.generativeai as genai
 from flask import Flask, request
 
 app = Flask(__name__)
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-@app.route('/')
-def home():
-    return "O ROBÔ ESTÁ VIVO E ONLINE!", 200
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyd3aqtSw-O09eOs2rFaCM_ZRs1yI3NG_Hfp6bfMTyq3li9SbOc5qlD91CL8aNiFIni/exec" # Cole aqui aquele link que termina em /exec
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
-    # Isso é o que a Meta usa para verificar seu servidor
+    # 1. Validação da Meta (O "Handshake")
     if request.method == 'GET':
         if request.args.get('hub.verify_token') == "lenha_agente_secreto_2026":
             return request.args.get('hub.challenge')
         return "Token inválido", 403
-    
-    # Isso é o que recebe as mensagens depois de validado
+
+    # 2. Processamento da Mensagem
     if request.method == 'POST':
+        data = request.json
+        try:
+            # Verifica se é uma imagem
+            msg = data['entry'][0]['changes'][0]['value']['messages'][0]
+            if msg.get('type') == 'image':
+                # Aqui entra a lógica: 
+                # 1. Baixar imagem via API do WhatsApp
+                # 2. Enviar para o Gemini extrair os campos
+                # 3. Enviar para a planilha
+                print("Imagem recebida com sucesso!")
+        except:
+            pass
         return "OK", 200
 
 if __name__ == '__main__':
