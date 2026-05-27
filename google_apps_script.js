@@ -4,7 +4,7 @@
 // Depois: Implantar → App da Web → Qualquer pessoa → Implantar
 // ─────────────────────────────────────────────────────────────────────────────
 
-var SPREADSHEET_ID = "COLE_AQUI_O_ID_DA_SUA_PLANILHA";  // ← alterar
+var SPREADSHEET_ID = "https://script.google.com/macros/s/AKfycbyd3aqtSw-O09eOs2rFaCM_ZRs1yI3NG_Hfp6bfMTyq3li9SbOc5qlD91CL8aNiFIni/exec";  // ← alterar
 var SHEET_NAME     = "Registros";
 
 function doPost(e) {
